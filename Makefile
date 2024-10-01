@@ -25,7 +25,6 @@ deps:
 	@echo "Installing dependencies..."
 	@go mod tidy
 
-
 # Help
 help:
 	@echo "Makefile commands:"
@@ -34,3 +33,5 @@ help:
 	@echo "  clean    - Remove the build directory."
 	@echo "  deps     - Install project dependencies."
 	@echo "  help     - Display this verreh halpful message."
+
+halp: help
