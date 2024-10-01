@@ -11,4 +11,13 @@ type Cell struct {
 	Neighbors   []Vector3 // Adjacent cell positions for logical connectivity
 }
 
-// TODO: NewCell
+// NewCell creates a new Cell with the specified position, terrain type, and height.
+func NewCell(position Vector3, terrainType string, height float64) Cell {
+	return Cell{
+		Position:    position,
+		TerrainType: terrainType,
+		Height:      height,
+		IsOccupied:  false, // Default to not occupied
+		ObjectType:  "",    // No object by default
+	}
+}
