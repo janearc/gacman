@@ -1,35 +1,52 @@
 package main
 
 import (
+	"gacman/models"
 	"github.com/gorilla/websocket"
+	"time"
+
 	"log"
-	"net/http"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+const (
+	wsEndpoint = "ws://localhost:8080" // Replace with your WebSocket server's address
+)
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+// StartDaemon sets up the WebSocket connection and sends data periodically.
+func StartDaemon() {
+	// Establish WebSocket connection
+	conn, _, err := websocket.DefaultDialer.Dial(wsEndpoint, nil)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalf("Failed to connect to WebSocket server: %v", err)
 	}
 	defer conn.Close()
 
-	// Send some data to the client
+	log.Println("Connected to WebSocket server.")
+
+	// Example object to send
+	obj := models.NewObject(1, 2, 3, "grass", 5.0, "tree")
+
+	// Periodically send data
+	ticker := time.NewTicker(5 * time.Second) // Send data every 5 seconds
+	defer ticker.Stop()
+
 	for {
-		message := `{"x": 0, "y": 0, "z": 0}` // Example JSON for object position
-		if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-			log.Println(err)
-			break
+		select {
+		case <-ticker.C:
+			// Serialize object to JSON
+			jsonString := obj.ToJSON()
+
+			// Send the JSON data to the server
+			err := conn.WriteMessage(websocket.TextMessage, []byte(jsonString))
+			if err != nil {
+				log.Printf("Error sending message: %v", err)
+				return
+			}
+			log.Printf("Sent data: %s", jsonString)
 		}
 	}
 }
 
 func main() {
-	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	StartDaemon()
 }
