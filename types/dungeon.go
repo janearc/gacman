@@ -6,11 +6,13 @@ type Dungeon struct {
 	CurrentLevel int // Index of the current level in the dungeon
 }
 
-// NewDungeon creates a new dungeon with an initial level.
+// NewDungeon creates a new dungeon and generates an initial level.
 func NewDungeon(size int) Dungeon {
-	initialLevel := NewLevel(size)
+	// Generate the first level of the dungeon
+	initialLevel := GenerateLevel(size)
+
 	return Dungeon{
-		Levels:       []Level{initialLevel},
+		Levels:       []Level{initialLevel}, // Add the generated level to the dungeon
 		CurrentLevel: 0,
 	}
 }

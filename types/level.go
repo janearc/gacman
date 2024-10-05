@@ -166,9 +166,26 @@ func createRooms(cells map[string]Cell, numRooms, size int) []Room {
 		width := rand.Intn(10) + 5 // Room width between 5 and 15
 		height := rand.Intn(6) + 4 // Room height between 4 and 10
 
+		// Ensure the room size does not exceed the level's size
+		if width >= size {
+			width = size - 1
+		}
+		if height >= size {
+			height = size - 1
+		}
+
+		// Ensure that x and y are within valid ranges
+		maxX := size - width - 1
+		maxY := size - height - 1
+
+		if maxX <= 0 || maxY <= 0 {
+			// Skip creating this room if it doesn't fit within the level's bounds
+			continue
+		}
+
 		// Random room position
-		x := rand.Intn(size - width - 1)
-		y := rand.Intn(size - height - 1)
+		x := rand.Intn(maxX)
+		y := rand.Intn(maxY)
 
 		newRoom := Room{
 			X:        x,
@@ -207,8 +224,8 @@ func GenerateLevel(size int) Level {
 
 	// Place "up" and "down" stairs in random rooms
 	stairsUp, stairsDown := placeStairsInRooms(cells, rooms)
-	
-	// Return the level with cells, stairs, and entities
+
+	// Return the level with cells, stairs, and rooms
 	return Level{
 		Cells:      cells,
 		StairsUp:   stairsUp,

@@ -16,9 +16,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// handleConnections upgrades HTTP connections to WebSocket connections and processes messages.
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade the HTTP connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorf("Failed to upgrade to WebSocket: %v", err)
@@ -32,22 +30,20 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Client connected.")
 
-	// Initialize the space with a size (e.g., 10x10 grid)
-	space := models.InitSpace(10)
+	// Initialize the space and get the starting coordinates
+	space, startingCoord := models.InitSpace(10)
 
-	// Define the starting coordinates (e.g., (0, 0))
-	startingCoord := core.GetCoordString(0, 0)
-
-	// Retrieve the starting cell from the space
+	// Retrieve the starting cell using the starting coordinates
 	currentCell, exists := space.GetCell(startingCoord)
 	if !exists {
 		log.Errorf("Starting cell not found at coordinates: %s", startingCoord)
 		return
 	}
 
-	// Send the initial cell data to the client
+	// Send initial cell to the client
 	initialData := currentCell.ToJSON()
-	if err := ws.WriteMessage(websocket.TextMessage, []byte(initialData)); err != nil {
+	err = ws.WriteMessage(websocket.TextMessage, []byte(initialData))
+	if err != nil {
 		log.Errorf("Error sending initial data to client: %v", err)
 		return
 	}
@@ -66,20 +62,21 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 		// Generate a new cell in the specified direction
 		newCell := types.GenerateNewCell(currentCell, direction)
-		newCoord := core.GetCoordString(int(newCell.Position.X()), int(newCell.Position.Y()))
+		coord := core.GetCoordString(int(newCell.Position.X()), int(newCell.Position.Y()))
 
 		// Add the new cell to the space if it's not already there
-		if _, exists := space.GetCell(newCoord); !exists {
-			space.AddCell(newCoord, newCell)
+		if _, exists := space.GetCell(coord); !exists {
+			space.AddCell(coord, newCell)
 			currentCell = newCell // Update the current cell to the newly created one
 		} else {
 			// If the cell already exists, set the current cell to the existing one
-			currentCell, _ = space.GetCell(newCoord)
+			currentCell, _ = space.GetCell(coord)
 		}
 
 		// Send the new cell data back to the client
 		response := currentCell.ToJSON()
-		if err := ws.WriteMessage(websocket.TextMessage, []byte(response)); err != nil {
+		err = ws.WriteMessage(websocket.TextMessage, []byte(response))
+		if err != nil {
 			log.Errorf("Error sending response to client: %v", err)
 			break
 		}

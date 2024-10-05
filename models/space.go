@@ -1,6 +1,7 @@
 package models
 
 import (
+	"gacman/core"
 	"gacman/types"
 	"math/rand"
 	"time"
@@ -46,15 +47,42 @@ func (s *Space) AddDungeon(dungeon types.Dungeon) {
 	s.Dungeons = append(s.Dungeons, dungeon)
 }
 
-// InitSpace initializes a new Space with a starting dungeon.
-func InitSpace(size int) Space {
+// InitSpace initializes a new Space with a starting dungeon and returns the starting coordinates.
+func InitSpace(size int) (Space, string) {
 	// Create a new space
 	space := NewSpace()
 
-	// Create and add the initial dungeon
-	initialDungeon := types.NewDungeon(size)
-	space.AddDungeon(initialDungeon)
+	// Create a new dungeon with an initial level
+	dungeon := types.NewDungeon(size)
 
-	// Return the initialized space
-	return space
+	// Add the dungeon to the space
+	space.AddDungeon(dungeon)
+
+	// Add the dungeon's first level's cells to the space's cells for easy access
+	for coord, cell := range dungeon.GetCurrentLevel().Cells {
+		space.AddCell(coord, cell)
+	}
+
+	// Randomly select a starting position within one of the rooms
+	rooms := dungeon.GetCurrentLevel().Rooms
+	var startingCoord string
+	if len(rooms) > 0 {
+		// Select a random room
+		randomRoom := rooms[rand.Intn(len(rooms))]
+
+		// Choose a random position within the room
+		startX := randomRoom.X + rand.Intn(randomRoom.Width)
+		startY := randomRoom.Y + rand.Intn(randomRoom.Height)
+
+		startingCoord = core.GetCoordString(startX, startY)
+
+		// Check if the cell exists and is a floor cell
+		if cell, exists := space.GetCell(startingCoord); exists && cell.TerrainType == "floor" {
+			return space, startingCoord
+		}
+	}
+
+	// Fallback: If no valid starting point is found, set a default coordinate
+	startingCoord = core.GetCoordString(0, 0)
+	return space, startingCoord
 }
