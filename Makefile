@@ -1,19 +1,22 @@
 # Variables
-BINARY_NAME=gacman
+SERVER_BINARY_NAME=gacman
+CLIENT_BINARY_NAME=client
 SOURCE_DIR=./
 BUILD_DIR=./build
 GO_FILES=$(shell find $(SOURCE_DIR) -name '*.go')
 
-# Default target: build the binary
-build: $(GO_FILES)
-	@echo "Summoning Gacman..."
-	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/$(BINARY_NAME) $(SOURCE_DIR)
+# Default target: build both the server and client binaries
+all: build-server build-client
 
-# Run the binary
-run: build
-	@echo "Running Gacman..."
-	@$(BUILD_DIR)/$(BINARY_NAME)
+# Build the server binary
+build-server:
+	@echo "Building the server..."
+	@go build -o $(BUILD_DIR)/$(SERVER_BINARY_NAME) ./server
+
+# Build the client binary
+build-client:
+	@echo "Building the client..."
+	@go build -o $(BUILD_DIR)/$(CLIENT_BINARY_NAME) ./client
 
 # Clean up the build directory
 clean:
