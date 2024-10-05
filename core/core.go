@@ -3,11 +3,21 @@ package core
 import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl64"
+	"math"
 )
+
+// You might call this "primitives" or "math", but this is the types and functions
+// that are the base classes (again, imprecise word) for lots of other things this
+// software uses.
 
 // Vector3 wraps around mathgl's Vec3 to provide additional functionality.
 type Vector3 struct {
 	mgl64.Vec3
+}
+
+// Quaternion represents a rotation in 3D space.
+type Quaternion struct {
+	X, Y, Z, W float64
 }
 
 // NewVector3 creates a new Vector3 instance.
@@ -50,10 +60,55 @@ func (v Vector3) String() string {
 	return fmt.Sprintf("Vector3(%f, %f, %f)", v.X(), v.Y(), v.Z())
 }
 
-// Example usage:
-// func main() {
-//     v1 := NewVector3(1.0, 2.0, 3.0)
-//     v2 := NewVector3(4.0, 5.0, 6.0)
-//     result := v1.Add(v2)
-//     fmt.Println(result) // Outputs: Vector3(5.000000, 7.000000, 9.000000)
-// }
+// NewQuaternion creates a new quaternion given x, y, z, and w components.
+func NewQuaternion(x, y, z, w float64) Quaternion {
+	return Quaternion{
+		X: x,
+		Y: y,
+		Z: z,
+		W: w,
+	}
+}
+
+// IdentityQuaternion returns the identity quaternion (no rotation).
+func IdentityQuaternion() Quaternion {
+	return Quaternion{
+		X: 0,
+		Y: 0,
+		Z: 0,
+		W: 1,
+	}
+}
+
+// QuaternionFromEuler creates a quaternion from Euler angles (in degrees).
+func QuaternionFromEuler(pitch, yaw, roll float64) Quaternion {
+	// Convert angles from degrees to radians
+	pitch = pitch * (math.Pi / 180)
+	yaw = yaw * (math.Pi / 180)
+	roll = roll * (math.Pi / 180)
+
+	c1 := math.Cos(yaw / 2)
+	c2 := math.Cos(pitch / 2)
+	c3 := math.Cos(roll / 2)
+	s1 := math.Sin(yaw / 2)
+	s2 := math.Sin(pitch / 2)
+	s3 := math.Sin(roll / 2)
+
+	return Quaternion{
+		X: s1*s2*c3 + c1*c2*s3,
+		Y: s1*c2*c3 + c1*s2*s3,
+		Z: c1*s2*c3 - s1*c2*s3,
+		W: c1*c2*c3 - s1*s2*s3,
+	}
+}
+
+// Normalize normalizes the quaternion to unit length.
+func (q *Quaternion) Normalize() {
+	length := math.Sqrt(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)
+	if length > 0 {
+		q.X /= length
+		q.Y /= length
+		q.Z /= length
+		q.W /= length
+	}
+}

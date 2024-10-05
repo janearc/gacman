@@ -5,6 +5,9 @@ import (
 	"log"
 )
 
+// TODO: this should be replaced by the entity type in shapes and
+//       i suspect that shapes should probably just go away
+
 // Object represents an entity within a cell.
 type Object struct {
 	Position    Vector3 `json:"position"`    // Uses Vector3 for position representation
