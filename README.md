@@ -45,4 +45,12 @@ expects cardinal directions, and the server responds by moving your cursor aroun
 level/dungeon/space. I don't plan to keep this text/console interactive layer around for very
 long, but I might keep some kind of relic there for debugging purposes (for example, `./client --show-map`).
 
+Client interface:
+
+![gacman client running on macos in zsh](https://github.com/janearc/gacman/blob/main/doc/client_ex.png?raw=true)
+
+Server-side:
+
+![gacman server running on macos in zsh](https://github.com/janearc/gacman/blob/main/doc/server_ex.png?raw=true)
+
 Have fun? I guess? What kind of person wants to use this?
