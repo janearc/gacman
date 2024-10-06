@@ -1,8 +1,7 @@
 package main
 
 import (
-	"gacman/core"
-	"gacman/types"
+	"encoding/json"
 	"net/http"
 
 	"gacman/models"
@@ -60,28 +59,35 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		direction := string(message)
 		log.Infof("Received direction: %s", direction)
 
-		// Generate a new cell in the specified direction
-		newCell := types.GenerateNewCell(currentCell, direction)
-		coord := core.GetCoordString(int(newCell.Position.X()), int(newCell.Position.Y()))
+		// Generate the new cell and check for movement status
+		newCell, status := models.GenerateNewCell(currentCell, direction, &space)
 
-		// Add the new cell to the space if it's not already there
-		if _, exists := space.GetCell(coord); !exists {
-			space.AddCell(coord, newCell)
-			currentCell = newCell // Update the current cell to the newly created one
-		} else {
-			// If the cell already exists, set the current cell to the existing one
-			currentCell, _ = space.GetCell(coord)
+		// If movement is successful, update the current cell
+		if status == "Movement successful" {
+			currentCell = newCell
 		}
 
-		// Send the new cell data back to the client
-		response := currentCell.ToJSON()
-		err = ws.WriteMessage(websocket.TextMessage, []byte(response))
+		// Prepare the response with the new cell data and the status message
+		response := map[string]string{
+			"cell":   currentCell.ToJSON(),
+			"status": status,
+		}
+
+		// Serialize the response to JSON
+		responseData, err := json.Marshal(response)
+		if err != nil {
+			log.Errorf("Error serializing response to JSON: %v", err)
+			break
+		}
+
+		// Send the response back to the client
+		err = ws.WriteMessage(websocket.TextMessage, responseData)
 		if err != nil {
 			log.Errorf("Error sending response to client: %v", err)
 			break
 		}
 
-		log.Infof("Sent cell data: %s", response)
+		log.Infof("Sent response: %s", responseData)
 	}
 }
 
