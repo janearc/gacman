@@ -47,8 +47,8 @@ func (s *Space) AddDungeon(dungeon types.Dungeon) {
 	s.Dungeons = append(s.Dungeons, dungeon)
 }
 
-// InitSpace initializes a new Space with a starting dungeon and returns the starting coordinates.
-func InitSpace(size int) (Space, string) {
+// InitSpace initializes a new Space with a starting dungeon and returns the starting coordinates and an ASCII map.
+func InitSpace(size int) (Space, string, string) {
 	// Create a new space
 	space := NewSpace()
 
@@ -62,6 +62,9 @@ func InitSpace(size int) (Space, string) {
 	for coord, cell := range dungeon.GetCurrentLevel().Cells {
 		space.AddCell(coord, cell)
 	}
+
+	// Generate the ASCII map for debugging
+	asciiMap := RenderASCIIMap(space, size)
 
 	// Randomly select a starting position within one of the rooms
 	rooms := dungeon.GetCurrentLevel().Rooms
@@ -78,11 +81,11 @@ func InitSpace(size int) (Space, string) {
 
 		// Check if the cell exists and is a floor cell
 		if cell, exists := space.GetCell(startingCoord); exists && cell.TerrainType == "floor" {
-			return space, startingCoord
+			return space, startingCoord, asciiMap
 		}
 	}
 
 	// Fallback: If no valid starting point is found, set a default coordinate
 	startingCoord = core.GetCoordString(0, 0)
-	return space, startingCoord
+	return space, startingCoord, asciiMap
 }

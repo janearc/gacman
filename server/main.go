@@ -29,8 +29,11 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Client connected.")
 
-	// Initialize the space and get the starting coordinates
-	space, startingCoord := models.InitSpace(10)
+	// Initialize the space, get the starting coordinates, and render the ASCII map
+	space, startingCoord, asciiMap := models.InitSpace(10)
+
+	// Print the ASCII map to the server console for debugging
+	log.Infof("\n%s", asciiMap)
 
 	// Retrieve the starting cell using the starting coordinates
 	currentCell, exists := space.GetCell(startingCoord)
@@ -39,13 +42,24 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send initial cell to the client
-	initialData := currentCell.ToJSON()
-	err = ws.WriteMessage(websocket.TextMessage, []byte(initialData))
+	// Send initial cell and ASCII map to the client
+	response := map[string]string{
+		"cell": currentCell.ToJSON(),
+		"map":  asciiMap,
+	}
+	responseData, err := json.Marshal(response)
 	if err != nil {
-		log.Errorf("Error sending initial data to client: %v", err)
+		log.Errorf("Error serializing response to JSON: %v", err)
 		return
 	}
+
+	err = ws.WriteMessage(websocket.TextMessage, responseData)
+	if err != nil {
+		log.Errorf("Error sending response to client: %v", err)
+		return
+	}
+
+	log.Infof("Sent initial data: %s", responseData)
 
 	// Main loop: Listen for client input and respond with generated content
 	for {
@@ -74,7 +88,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Serialize the response to JSON
-		responseData, err := json.Marshal(response)
+		responseData, err = json.Marshal(response)
 		if err != nil {
 			log.Errorf("Error serializing response to JSON: %v", err)
 			break
